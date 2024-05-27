@@ -17,33 +17,31 @@ class ProductListPage extends GetWidget<ProductListController> {
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: Scaffold(
           backgroundColor: white,
-          body: Expanded(
-            child: RefreshIndicator(
-              onRefresh: () {
-                return Future.delayed(const Duration(seconds: 0), () {
-                  controller.getProducts();
-                });
-              },
-              child: Obx(
-                () => (controller.isLoadingRetrieveProduct)
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(primary),
-                      ))
-                    : (controller.products.isEmpty)
-                        ? Stack(
-                            children: [
-                              ListView(),
-                              const Center(
-                                child: EmptyListStateWidget(
-                                  iconSource: ic_empty_data,
-                                  text: "No product to show",
-                                ),
+          body: RefreshIndicator(
+            onRefresh: () {
+              return Future.delayed(const Duration(seconds: 0), () {
+                controller.getProducts();
+              });
+            },
+            child: Obx(
+              () => (controller.isLoadingRetrieveProduct)
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(primary),
+                    ))
+                  : (controller.products.isEmpty)
+                      ? Stack(
+                          children: [
+                            ListView(),
+                            const Center(
+                              child: EmptyListStateWidget(
+                                iconSource: ic_empty_data,
+                                text: "No product to show",
                               ),
-                            ],
-                          )
-                        : buildProductList(context),
-              ),
+                            ),
+                          ],
+                        )
+                      : buildProductList(context),
             ),
           ),
         ),
@@ -56,6 +54,7 @@ class ProductListPage extends GetWidget<ProductListController> {
       mainAxisSpacing: 16,
       shrinkWrap: true,
       itemCount: controller.products.length,
+      controller: controller.scrollController,
       builder: (context, index) {
         final product = controller.products[index];
         return Container(
@@ -88,35 +87,38 @@ class ProductListPage extends GetWidget<ProductListController> {
                     children: [
                       AspectRatio(
                         aspectRatio: 1 / 1,
-                        child: CachedNetworkImage(
-                          imageUrl: product.images?.isNotEmpty == true
-                              ? product.images![0].urlSmall ?? ''
-                              : '',
-                          fit: BoxFit.cover,
-                          errorWidget: (context, url, error) => Image.asset(
-                            ic_error_image,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                        child: product.images!.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: product.images![0].url!,
+                                fit: BoxFit.cover,
+                                errorWidget: (context, url, error) =>
+                                    Image.asset(
+                                  ic_error_image,
+                                  fit: BoxFit.contain,
+                                ),
+                              )
+                            : Image.asset(
+                                ic_error_image,
+                                fit: BoxFit.contain,
+                              ),
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           InkWell(
-                            onTap: () => {controller.setFavorite(product)},
-                            child: Padding(
-                              padding: EdgeInsets.all(8),
-                              child: Obx(
-                                    () => Image.asset(
-                                  product.isFavorite
-                                      ? ic_favorite_filled
-                                      : ic_favorite_empty,
-                                  width: 24,
-                                  height: 24,
+                              onTap: () => {controller.setFavorite(product)},
+                              child: Padding(
+                                padding: EdgeInsets.all(8),
+                                child: Obx(
+                                  () => Image.asset(
+                                    product.isFavorite
+                                        ? ic_favorite_filled
+                                        : ic_favorite_empty,
+                                    width: 24,
+                                    height: 24,
+                                  ),
                                 ),
-                              ),
-                            )
-                          )
+                              ))
                         ],
                       ),
                     ],

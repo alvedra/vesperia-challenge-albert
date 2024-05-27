@@ -39,30 +39,38 @@ class ProfilePage extends GetView<ProfileController> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Obx(() => ClipOval(
-                            child: CachedNetworkImage(
-                              width: 48,
-                              height: 48,
-                              imageUrl: controller.profilePictureUrl,
-                              fit: BoxFit.cover,
-                              progressIndicatorBuilder: (context, url,
-                                  downloadProgress) =>
-                                  CircularProgressIndicator(
-                                      value: downloadProgress.progress),
-                              errorWidget: (context, url, error) =>
-                                  Image.asset(
-                                    width: 48,
-                                    height: 48,
-                                    defaultProfileImage,
-                                    fit: BoxFit.cover,
-                                  ),
-                            ),
-                          )),
+                                child: controller.profilePictureUrl.isNotEmpty
+                                    ? CachedNetworkImage(
+                                        width: 48,
+                                        height: 48,
+                                        imageUrl: controller.profilePictureUrl,
+                                        fit: BoxFit.cover,
+                                        progressIndicatorBuilder: (context, url,
+                                                downloadProgress) =>
+                                            CircularProgressIndicator(
+                                                value:
+                                                    downloadProgress.progress),
+                                        errorWidget: (context, url, error) =>
+                                            Image.asset(
+                                          width: 48,
+                                          height: 48,
+                                          defaultProfileImage,
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : Image.asset(
+                                        width: 48,
+                                        height: 48,
+                                        defaultProfileImage,
+                                        fit: BoxFit.cover,
+                                      ),
+                              )),
                           const SizedBox(width: 16),
                           Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Obx(() => Text(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Obx(() => Text(
                                     controller.name,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -70,8 +78,8 @@ class ProfilePage extends GetView<ProfileController> {
                                       fontWeight: FontWeight.w600,
                                     ),
                                   )),
-                                  const SizedBox(height: 4),
-                                  Obx(() => Text(
+                              const SizedBox(height: 4),
+                              Obx(() => Text(
                                     controller.phone,
                                     style: const TextStyle(
                                       fontSize: 14,
@@ -79,8 +87,8 @@ class ProfilePage extends GetView<ProfileController> {
                                       fontWeight: FontWeight.w400,
                                     ),
                                   )),
-                                ],
-                              )),
+                            ],
+                          )),
                           Image.asset(
                             ic_arrow_right,
                             height: 20,
@@ -95,9 +103,8 @@ class ProfilePage extends GetView<ProfileController> {
               const Divider(thickness: 4, color: gray100, height: 4),
               Column(
                 children: [
-                  iconTileProfile(ic_test_unauthenticated, "Test 401",
-                      () {
-                    controller.onTestUnauthenticatedClick();
+                  iconTileProfile(ic_test_unauthenticated, "Test 401", () {
+                    controller.handleErrorRequest();
                   }),
                   iconTileProfile(ic_download, "Download File", () {
                     controller.onDownloadFileClick();
@@ -157,19 +164,31 @@ class ProfilePage extends GetView<ProfileController> {
       );
 
   Widget signOutButton(BuildContext context) => SizedBox(
-      height: 52,
-      width: double.infinity,
-      child: SizedBox(
         height: 52,
         width: double.infinity,
-        child: ButtonIcon(
-          buttonColor: red50,
-          textColor: red600,
-          textLabel: "Sign Out",
-          onClick: () {
-            controller.doLogout();
-          },
+        child: SizedBox(
+          height: 52,
+          width: double.infinity,
+          child: Obx(
+            () => ElevatedButton(
+              style: ButtonStyle(
+                backgroundColor: (!controller.isSigningOut)
+                    ? MaterialStateProperty.all(red50)
+                    : MaterialStateProperty.all(gray100),
+              ),
+              onPressed: (!controller.isSigningOut)
+                  ? () {
+                      controller.doLogout();
+                    }
+                  : null,
+              child: Text(
+                'Sign Out',
+                style: (!controller.isSigningOut)
+                    ? const TextStyle(color: red600)
+                    : const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
         ),
-      ),
-  );
+      );
 }

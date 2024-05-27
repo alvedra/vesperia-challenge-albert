@@ -1,3 +1,6 @@
+import 'package:entrance_test/app/routes/route_name.dart';
+import 'package:entrance_test/src/models/realm/favorite_model.dart';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
 import '../../../../../models/product_model.dart';
@@ -8,10 +11,13 @@ import '../../../../../widgets/snackbar_widget.dart';
 
 class ProductListController extends GetxController {
   final ProductRepository _productRepository;
+  final FavoriteModel _favoriteModel;
 
-  ProductListController({
-    required ProductRepository productRepository,
-  }) : _productRepository = productRepository;
+  ProductListController(
+      {required ProductRepository productRepository,
+      required FavoriteModel favoriteModel})
+      : _productRepository = productRepository,
+        _favoriteModel = favoriteModel;
 
   final _products = Rx<List<ProductModel>>([]);
 
@@ -42,10 +48,14 @@ class ProductListController extends GetxController {
   //thus giving the command to ignore the first x number of data when retrieving
   int _skip = 0;
 
+  late ScrollController scrollController;
+
   @override
   void onInit() {
     super.onInit();
     getProducts();
+
+    scrollController = ScrollController()..addListener(getMoreProducts);
   }
 
   //first load or after refresh.
@@ -58,7 +68,14 @@ class ProductListController extends GetxController {
         limit: _limit,
         skip: _skip,
       ));
-      _products.value = productList.data;
+
+      // Check if products is in the favorite;
+      final productListWithFavorites = productList.data
+          .map((product) =>
+              product..isFavorite = _favoriteModel.isProductInFavorite(product))
+          .toList();
+
+      _products.value = productListWithFavorites;
       _products.refresh();
       _isLastPageProduct.value = productList.data.length < _limit;
       _skip = products.length;
@@ -73,16 +90,45 @@ class ProductListController extends GetxController {
 
     _isLoadingRetrieveMoreProduct.value = true;
 
-    //TODO: finish this function by calling get product list with appropriate parameters
+    if (scrollController.position.extentAfter < 300) {
+      try {
+        final productList =
+            await _productRepository.getProductList(ProductListRequestModel(
+          limit: _limit,
+          skip: _skip,
+        ));
+
+        // Check if products is in the favorite;
+        final productListWithFavorites = productList.data
+            .map((product) => product
+              ..isFavorite = _favoriteModel.isProductInFavorite(product))
+            .toList();
+
+        _products.value.addAll(productListWithFavorites);
+        _products.refresh();
+        _isLastPageProduct.value = productList.data.length < _limit;
+        _skip = products.length;
+      } catch (error) {
+        SnackbarWidget.showFailedSnackbar(NetworkingUtil.errorMessage(error));
+      }
+    }
 
     _isLoadingRetrieveMoreProduct.value = false;
   }
 
   void toProductDetail(ProductModel product) async {
-    //TODO: finish this implementation by creating product detail page & calling it here
+    Get.toNamed(RouteName.productDetailById(product.id));
   }
 
   void setFavorite(ProductModel product) {
-    product.isFavorite = !product.isFavorite;
+    if (!product.isFavorite) {
+      product.isFavorite = true;
+      _favoriteModel.addToFavorite(product);
+      SnackbarWidget.showSuccessSnackbar('Added to Favorite');
+    } else {
+      product.isFavorite = false;
+      _favoriteModel.removeFromFavorite(product);
+      SnackbarWidget.showSuccessSnackbar('Removed From Favorite');
+    }
   }
 }

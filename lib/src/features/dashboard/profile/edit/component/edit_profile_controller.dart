@@ -1,6 +1,10 @@
+import 'package:dio/dio.dart';
+import 'package:entrance_test/app/routes/route_name.dart';
+import 'package:entrance_test/src/models/user_model.dart';
 import 'package:entrance_test/src/repositories/user_repository.dart';
 import 'package:entrance_test/src/utils/string_ext.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 import '../../../../../utils/date_util.dart';
@@ -13,6 +17,8 @@ class EditProfileController extends GetxController {
   EditProfileController({
     required UserRepository userRepository,
   }) : _userRepository = userRepository;
+
+  final GlobalKey<FormState> formFieldKey = GlobalKey();
 
   final etFullName = TextEditingController();
   final etPhoneNumber = TextEditingController();
@@ -43,6 +49,18 @@ class EditProfileController extends GetxController {
 
   DateTime birthDate = DateTime.now();
 
+  late final String _id;
+
+  final _isUpdatingProfile = false.obs;
+  bool get isUpdatingProfile => _isUpdatingProfile.value;
+
+  List<TextInputFormatter>? numberInputFormatters = [
+    FilteringTextInputFormatter.allow(
+      // only allow numbers (0 – 9) and deny 0 as prefix
+      RegExp(r'^(0|[1-9][0-9]*)$'),
+    ),
+  ];
+
   @override
   void onInit() {
     super.onInit();
@@ -54,6 +72,7 @@ class EditProfileController extends GetxController {
       final response = await _userRepository.getUser();
       if (response.status == 0) {
         final localUser = response.data;
+        _id = localUser.id;
         etFullName.text = localUser.name;
         etPhoneNumber.text = localUser.phone;
         etEmail.text = localUser.email ?? '';
@@ -74,7 +93,8 @@ class EditProfileController extends GetxController {
 
         etBirthDate.text = '';
         if (localUser.dateOfBirth.isNullOrEmpty == false) {
-          birthDate = DateUtil.getDateFromShortServerFormat(localUser.dateOfBirth!);
+          birthDate =
+              DateUtil.getDateFromShortServerFormat(localUser.dateOfBirth!);
           etBirthDate.text = DateUtil.getBirthDate(birthDate);
         }
       } else {
@@ -104,7 +124,69 @@ class EditProfileController extends GetxController {
     etBirthDate.text = DateUtil.getBirthDate(birthDate);
   }
 
-  void saveData() async {
-    //TODO: Implement edit user API
+  String? nameValidator(value) {
+    if (value == null || value.isEmpty) {
+      return 'The field is required';
+    }
+    return null;
+  }
+
+  String? emailValidator(value) {
+    if (value == null || value.isEmpty) {
+      return 'The field is required';
+    }
+
+    bool isValid = RegExp(
+            r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+        .hasMatch(value);
+    if (!isValid) {
+      return 'Email is not valid';
+    }
+
+    return null;
+  }
+
+  String? heightAndWeightValidator(value) {
+    if (value == null || value.isEmpty) {
+      return 'The field is required';
+    }
+    if (int.parse(value) <= 0) {
+      return 'Must be > 0';
+    }
+    return null;
+  }
+
+  void saveData() {
+    _isUpdatingProfile.value = true;
+    if (!formFieldKey.currentState!.validate()) {
+      _isUpdatingProfile.value = false;
+      return;
+    }
+    try {
+      _isUpdatingProfile.value = true;
+      _userRepository.updateUser(
+        UserModel(
+          id: _id,
+          name: etFullName.text,
+          phone: etPhoneNumber.text,
+          countryCode: countryCode,
+          email: etEmail.text,
+          gender: gender,
+          height: int.parse(etHeight.text),
+          weight: int.parse(etWeight.text),
+          dateOfBirth: DateUtil.getShortServerFormatDateString(birthDate),
+        ),
+      );
+      SnackbarWidget.showSuccessSnackbar('Profile is Updated.');
+      Get.offNamed(RouteName.dashboard);
+    } on DioException catch (e) {
+      if (e.response != null) {
+        String? error = e.response?.data['message'];
+        SnackbarWidget.showFailedSnackbar('Failed to Sign in: $error');
+      } else {
+        SnackbarWidget.showFailedSnackbar('Something is wrong.');
+      }
+      _isUpdatingProfile.value = false;
+    }
   }
 }

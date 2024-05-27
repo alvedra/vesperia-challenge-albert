@@ -1,6 +1,7 @@
+import 'package:country_code_picker/country_code_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:get/get_state_manager/src/simple/get_view.dart';
 
 import '../../constants/color.dart';
 import '../../constants/icon.dart';
@@ -32,185 +33,205 @@ class LoginPage extends GetView<LoginController> {
             left: 24,
             right: 24,
           ),
-          child: Column(
-            children: [
-              const SizedBox(height: 16),
-              const SizedBox(
-                width: double.infinity,
-                child: Text(
-                  "Hi, Welcome Back",
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w500,
+          child: Form(
+            key: controller.formFieldKey,
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                const SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    "Hi, Welcome Back",
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(
-                height: 4,
-              ),
-              const SizedBox(
-                width: double.infinity,
-                child: Text(
-                  'Sign in to your account.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: gray500,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(
+                  height: 4,
+                ),
+                const SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    'Sign in to your account.',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: gray500,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 32),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: 'Phone Number',
-                                style: TextStyle(color: gray900),
-                              ),
-                              TextSpan(
-                                text: ' *',
-                                style: TextStyle(color: red500),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    keyboardType: TextInputType.phone,
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: gray900),
-                    cursorColor: primary,
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide:
-                            const BorderSide(color: gray200, width: 1.5),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide:
-                            const BorderSide(color: gray200, width: 1.5),
-                      ),
-                      fillColor: white,
-                      filled: true,
-                      hintText: 'Phone Number',
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 14.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(width: 6),
-                            Text(
-                              '+62',
+                const SizedBox(height: 32),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            text: const TextSpan(
                               style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: gray900),
-                            ),
-                            SizedBox(width: 12),
-                            SizedBox(
-                              width: 1.5,
-                              height: 48,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(color: gray100),
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
                               ),
+                              children: [
+                                TextSpan(
+                                  text: 'Phone Number',
+                                  style: TextStyle(color: gray900),
+                                ),
+                                TextSpan(
+                                  text: ' *',
+                                  style: TextStyle(color: red500),
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    controller: controller.etPhone,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Column(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RichText(
-                          text: const TextSpan(
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      keyboardType: TextInputType.phone,
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: gray900),
+                      cursorColor: primary,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide:
+                              const BorderSide(color: gray200, width: 1.5),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                          borderSide:
+                              const BorderSide(color: gray200, width: 1.5),
+                        ),
+                        fillColor: white,
+                        filled: true,
+                        hintText: 'Phone Number',
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 14.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              TextSpan(
-                                text: 'Password',
-                                style: TextStyle(color: gray900),
+                              CountryCodePicker(
+                                onChanged: (countryCode) {
+                                  controller.changeCountryCode(countryCode);
+                                },
+                                initialSelection: 'ID',
+                                favorite: const ['+62', 'ID'],
+                                showCountryOnly: false,
+                                showOnlyCountryWhenClosed: false,
+                                alignLeft: false,
+                                padding: EdgeInsets.zero,
                               ),
-                              TextSpan(
-                                text: ' *',
-                                style: TextStyle(color: red500),
+                              const SizedBox(
+                                width: 1.5,
+                                height: 48,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(color: gray100),
+                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    keyboardType: TextInputType.visiblePassword,
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: gray900),
-                    obscureText: true,
-                    cursorColor: primary,
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.only(
-                        left: 12,
-                        right: -14,
-                        top: 20,
-                        bottom: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide:
-                            const BorderSide(color: gray200, width: 1.5),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                        borderSide:
-                            const BorderSide(color: gray200, width: 1.5),
-                      ),
-                      fillColor: white,
-                      filled: true,
-                      hintText: 'Password',
-                      prefixIcon: const Padding(
-                        padding: EdgeInsets.all(14.0),
-                        child: ImageIcon(
-                          AssetImage(ic_password),
-                        ), // icon is 48px widget.
+                      inputFormatters: controller.numberInputFormatters,
+                      controller: controller.etPhone,
+                      validator: controller.phoneNumberValidator,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: RichText(
+                            text: const TextSpan(
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: 'Password',
+                                  style: TextStyle(color: gray900),
+                                ),
+                                TextSpan(
+                                  text: ' *',
+                                  style: TextStyle(color: red500),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Obx(
+                      () => TextFormField(
+                        keyboardType: TextInputType.visiblePassword,
+                        textAlign: TextAlign.start,
+                        style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: gray900),
+                        obscureText: controller.obscurePassword,
+                        cursorColor: primary,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.only(
+                            left: 12,
+                            right: -14,
+                            top: 20,
+                            bottom: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide:
+                                const BorderSide(color: gray200, width: 1.5),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                            borderSide:
+                                const BorderSide(color: gray200, width: 1.5),
+                          ),
+                          fillColor: white,
+                          filled: true,
+                          hintText: 'Password',
+                          prefixIcon: const Padding(
+                            padding: EdgeInsets.all(14.0),
+                            child: ImageIcon(
+                              AssetImage(ic_password),
+                            ), // icon is 48px widget.
+                          ),
+                          suffixIcon: GestureDetector(
+                            onTap: () {
+                              controller.togglePassword();
+                            },
+                            child: Icon(
+                              controller.obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                          ),
+                        ),
+                        controller: controller.etPassword,
+                        validator: controller.passwordValidator,
                       ),
                     ),
-                    controller: controller.etPassword,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              loginButton(),
-              const SizedBox(height: 16),
-            ],
+                  ],
+                ),
+                const SizedBox(height: 24),
+                loginButton(),
+                const SizedBox(height: 16),
+              ],
+            ),
           ),
         ),
       ),
@@ -223,13 +244,23 @@ class LoginPage extends GetView<LoginController> {
       child: SizedBox(
         height: 52,
         width: double.infinity,
-        child: ButtonIcon(
-          buttonColor: primary,
-          textColor: white,
-          textLabel: "Sign In",
-          onClick: () {
-            controller.doLogin();
-          },
+        child: Obx(
+          () => ElevatedButton(
+            style: ButtonStyle(
+              backgroundColor: (!controller.isSigningIn)
+                  ? MaterialStateProperty.all(primary)
+                  : MaterialStateProperty.all(gray100),
+            ),
+            onPressed: (!controller.isSigningIn)
+                ? () {
+                    controller.doLogin();
+                  }
+                : null,
+            child: const Text(
+              'Sign In',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
         ),
       ));
 }
